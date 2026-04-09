@@ -1,7 +1,7 @@
 {
   "name": "@agiterra/operator-relay-claude-code",
-  "version": "0.1.0",
-  "description": "Operator-prompt relay for Claude Code — forwards operator prompts to managing agents via Wire.",
+  "version": "0.2.0",
+  "description": "Operator-prompt relay for Claude Code \u2014 forwards operator prompts to managing agents via Wire.",
   "license": "MIT",
   "type": "module",
   "bin": "./server.ts",
@@ -14,7 +14,8 @@
     ".claude-plugin/"
   ],
   "dependencies": {
-    "@agiterra/operator-relay-tools": "git+ssh://git@github.com/agiterra/operator-relay-tools.git#v0.1.0",
+    "@agiterra/operator-relay-tools": "git+ssh://git@github.com/agiterra/operator-relay-tools.git#5414298",
+    "@agiterra/wire-tools": "git+ssh://git@github.com/agiterra/wire-tools.git#v0.12.0",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
