@@ -33,6 +33,12 @@ async function main() {
   const relay = getRelay(agentId);
   if (!relay) process.exit(0);
 
+  // Guard: never relay to self (infinite loop protection)
+  if (relay.notify === agentId) {
+    console.error(`[operator-relay] skipping self-relay for '${agentId}'`);
+    process.exit(0);
+  }
+
   const privateKey = await importPrivateKey(rawKey);
 
   try {
