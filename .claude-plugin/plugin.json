@@ -1,6 +1,6 @@
 {
   "name": "operator-relay",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Forwards operator prompts on ephemeral agents to their managing agent via Wire.",
   "author": {
     "name": "Tim Garthwaite",
@@ -9,6 +9,7 @@
   "license": "MIT",
   "keywords": ["operator", "relay", "prompt", "ephemeral", "wire"],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "postInstall": "bun install",
   "postUpdate": "bun install"
 }
