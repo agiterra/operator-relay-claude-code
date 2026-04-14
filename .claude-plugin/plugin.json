@@ -1,6 +1,6 @@
 {
   "name": "operator-relay",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Forwards operator prompts on ephemeral agents to their managing agent via Wire.",
   "author": {
     "name": "Tim Garthwaite",
