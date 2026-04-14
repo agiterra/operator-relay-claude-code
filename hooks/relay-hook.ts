@@ -24,6 +24,12 @@ async function main() {
   const prompt = input.prompt ?? "";
   if (!prompt) process.exit(0);
 
+  // Skip channel-delivered content — only relay actual operator prompts.
+  // CC fires UserPromptSubmit on channel message delivery too.
+  if (prompt.includes("<channel source=") || prompt.includes("<channel ")) {
+    process.exit(0);
+  }
+
   const agentId = process.env.AGENT_ID;
   if (!agentId) process.exit(0);
 
