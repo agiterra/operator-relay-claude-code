@@ -28,5 +28,5 @@ Operator relay — forwards operator prompts on ephemeral agents to their managi
 | Var | Default | Description |
 |-----|---------|-------------|
 | `WIRE_URL` | `http://localhost:9800` | Wire server base URL |
-| `CREW_AGENT_ID` | — | This agent's identity (required) |
-| `CREW_PRIVATE_KEY` | — | Ed25519 private key for signing outbound messages (required) |
+| `AGENT_ID` | — | This agent's identity (required) |
+| `AGENT_PRIVATE_KEY` | — | Ed25519 private key for signing outbound messages (required) |
