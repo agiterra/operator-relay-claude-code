@@ -24,9 +24,28 @@ async function main() {
   const prompt = input.prompt ?? "";
   if (!prompt) process.exit(0);
 
-  // Skip channel-delivered content — only relay actual operator prompts.
-  // CC fires UserPromptSubmit on channel message delivery too.
-  if (prompt.includes("<channel source=") || prompt.includes("<channel ")) {
+  // Relay ONLY genuine operator prompts. Claude Code fires
+  // UserPromptSubmit for several synthetic prompt sources that look like
+  // operator input but aren't — skip each one explicitly:
+  //
+  //   <channel ...>              Wire channel message delivery (from other agents)
+  //   <task-notification>        subagent / tool completion events inside the
+  //                              ephemeral's own session (Stage-2 reviewer
+  //                              completions, background agent wake-ups, etc.)
+  //   <system-reminder>          CC's own periodic nudges
+  //   <command-name>             slash-command expansions
+  //
+  // Brioche noticed the task-notification leak on 2026-04-17: Kouign's
+  // Stage-2 reviewer completions were being relayed to her as
+  // operator-prompt type, burning tokens on summarization.
+  const syntheticMarkers = [
+    "<channel source=",
+    "<channel ",
+    "<task-notification",
+    "<system-reminder",
+    "<command-name",
+  ];
+  if (syntheticMarkers.some((m) => prompt.includes(m))) {
     process.exit(0);
   }
 
