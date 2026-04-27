@@ -9,11 +9,65 @@
  * Stdout: nothing (silent relay, no context injection)
  */
 
+import { readFileSync } from "fs";
 import { getRelay, forwardPrompt } from "@agiterra/operator-relay-tools";
 import { importPrivateKey } from "@agiterra/wire-tools";
 
+/**
+ * Check the transcript JSONL for the most recent user record matching the
+ * incoming prompt and inspect its `isMeta` field. CC marks system-injected
+ * user records (ScheduleWakeup-fired prompts, skill-body injections, channel
+ * deliveries, etc.) with `isMeta: true`; genuine operator prompts have it
+ * absent or false. The hook stdin doesn't surface this flag in current CC
+ * versions, so we read the transcript directly.
+ *
+ * Returns true if the most recent user record is meta (skip relay).
+ * Returns false if the latest user record is genuine, or if we couldn't
+ * read the transcript (fall through to existing string-marker heuristics).
+ */
+function isMetaUserRecord(transcriptPath: string | undefined, prompt: string): boolean {
+  if (!transcriptPath) return false;
+  try {
+    const lines = readFileSync(transcriptPath, "utf-8").split("\n").filter((l) => l);
+    // Walk backwards looking for the latest non-sidechain user record whose
+    // content is a TEXT prompt (not a tool_result). The just-submitted prompt
+    // should be at or near the tail.
+    const head = (s: string) => s.slice(0, 200);
+    for (let i = lines.length - 1; i >= 0; i--) {
+      let rec: any;
+      try { rec = JSON.parse(lines[i]); } catch { continue; }
+      if (rec.type !== "user" || rec.isSidechain) continue;
+
+      const content = rec.message?.content;
+      // Tool-result records also have type=user but content is an array of
+      // tool_result entries — skip those, we only care about text prompts.
+      let text: string;
+      if (typeof content === "string") {
+        text = content;
+      } else if (Array.isArray(content)) {
+        // Skip if all items are tool_result; otherwise find a text item.
+        if (content.every((c: any) => c?.type === "tool_result")) continue;
+        text = content.find((c: any) => c && typeof c.text === "string")?.text ?? "";
+      } else {
+        continue;
+      }
+      if (!text) continue;
+
+      const matches = head(text).includes(head(prompt)) || head(prompt).includes(head(text));
+      if (matches) return rec.isMeta === true;
+      // First text user-record we hit is the most recent; if it doesn't match
+      // our prompt, the transcript hasn't been updated yet — defer judgement
+      // and fall through to string-marker checks rather than guessing.
+      return false;
+    }
+  } catch {
+    // Permissions, missing file, races — fall through.
+  }
+  return false;
+}
+
 async function main() {
-  let input: { prompt?: string };
+  let input: { prompt?: string; transcript_path?: string; isMeta?: boolean };
   try {
     const raw = await Bun.stdin.text();
     input = JSON.parse(raw);
@@ -24,20 +78,21 @@ async function main() {
   const prompt = input.prompt ?? "";
   if (!prompt) process.exit(0);
 
-  // Relay ONLY genuine operator prompts. Claude Code fires
-  // UserPromptSubmit for several synthetic prompt sources that look like
-  // operator input but aren't — skip each one explicitly:
+  // Relay ONLY genuine operator prompts. Several signals catch system-
+  // injected prompts that look like operator input but aren't:
   //
-  //   <channel ...>              Wire channel message delivery (from other agents)
-  //   <task-notification>        subagent / tool completion events inside the
-  //                              ephemeral's own session (Stage-2 reviewer
-  //                              completions, background agent wake-ups, etc.)
-  //   <system-reminder>          CC's own periodic nudges
-  //   <command-name>             slash-command expansions
-  //
-  // Brioche noticed the task-notification leak on 2026-04-17: Kouign's
-  // Stage-2 reviewer completions were being relayed to her as
-  // operator-prompt type, burning tokens on summarization.
+  // 1. transcript `isMeta: true` — CC marks ScheduleWakeup-fired prompts,
+  //    skill-body injections, and channel-event deliveries with this flag.
+  //    Authoritative when present. Brioche caught the wakeup-fired leak on
+  //    2026-04-27 when Choux's self-scheduled wakeup body was relayed as a
+  //    Tim prompt.
+  // 2. Inline string markers — Wire channels, task-notifications, system-
+  //    reminders, command-name expansions wrap their content in known XML
+  //    tags. These predate isMeta as a detection path but are still the
+  //    fallback for content-only signals.
+  if (input.isMeta === true) process.exit(0);
+  if (isMetaUserRecord(input.transcript_path, prompt)) process.exit(0);
+
   const syntheticMarkers = [
     "<channel source=",
     "<channel ",
