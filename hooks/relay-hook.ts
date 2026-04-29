@@ -88,8 +88,13 @@ async function main() {
   //    Tim prompt.
   // 2. Inline string markers — Wire channels, task-notifications, system-
   //    reminders, command-name expansions wrap their content in known XML
-  //    tags. These predate isMeta as a detection path but are still the
-  //    fallback for content-only signals.
+  //    tags. /loop sentinels are also matched here; the transcript-isMeta
+  //    gate catches them when the hook stdin's prompt matches the stored
+  //    sentinel literally, but if CC expands the sentinel before the hook
+  //    fires the prompt-match falls through. The string markers below are
+  //    the authoritative fallback either way. Brioche caught the /loop
+  //    leak on 2026-04-29 (Choux's autonomous loop fires being relayed
+  //    every iteration).
   if (input.isMeta === true) process.exit(0);
   if (isMetaUserRecord(input.transcript_path, prompt)) process.exit(0);
 
@@ -99,6 +104,8 @@ async function main() {
     "<task-notification",
     "<system-reminder",
     "<command-name",
+    "<<autonomous-loop-dynamic>>",
+    "<<autonomous-loop>>",
   ];
   if (syntheticMarkers.some((m) => prompt.includes(m))) {
     process.exit(0);
