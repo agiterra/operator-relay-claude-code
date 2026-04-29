@@ -32,7 +32,16 @@ function isMetaUserRecord(transcriptPath: string | undefined, prompt: string): b
     // Walk backwards looking for the latest non-sidechain user record whose
     // content is a TEXT prompt (not a tool_result). The just-submitted prompt
     // should be at or near the tail.
-    const head = (s: string) => s.slice(0, 200);
+    //
+    // Match is intentionally EXACT (within a 500-char slice for long-prompt
+    // efficiency) rather than substring-includes. Earlier `includes()`
+    // heuristic over-triggered: if a prior synthetic record's text was
+    // "thanks for the ack" and Tim said "thanks", `head(text).includes(prompt)`
+    // returned true and the gate skipped Tim's real prompt as meta. Tim
+    // reported the resulting inconsistency on 2026-04-29. Exact prefix
+    // equality protects against substring collisions while still tolerating
+    // CC vs hook-stdin truncation past 500 chars.
+    const head = (s: string) => s.slice(0, 500);
     for (let i = lines.length - 1; i >= 0; i--) {
       let rec: any;
       try { rec = JSON.parse(lines[i]); } catch { continue; }
@@ -53,11 +62,11 @@ function isMetaUserRecord(transcriptPath: string | undefined, prompt: string): b
       }
       if (!text) continue;
 
-      const matches = head(text).includes(head(prompt)) || head(prompt).includes(head(text));
-      if (matches) return rec.isMeta === true;
-      // First text user-record we hit is the most recent; if it doesn't match
-      // our prompt, the transcript hasn't been updated yet — defer judgement
-      // and fall through to string-marker checks rather than guessing.
+      if (head(text) === head(prompt)) return rec.isMeta === true;
+      // First text user-record we hit is the most recent; if it doesn't
+      // exact-match our prompt, the transcript hasn't been updated yet OR
+      // we hit an unrelated prior record. Fall through to string-marker
+      // checks rather than guessing isMeta.
       return false;
     }
   } catch {
