@@ -1,6 +1,6 @@
 {
   "name": "@agiterra/operator-relay-claude-code",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Operator-prompt relay for Claude Code \u2014 forwards operator prompts to managing agents via Wire.",
   "license": "MIT",
   "type": "module",
