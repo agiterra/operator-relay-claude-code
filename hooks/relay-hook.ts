@@ -33,6 +33,13 @@ function isMetaUserRecord(transcriptPath: string | undefined, prompt: string): b
     // content is a TEXT prompt (not a tool_result). The just-submitted prompt
     // should be at or near the tail.
     //
+    // ALSO check, on the way, for `system/scheduled_task_fire` records near
+    // the tail — CC writes that marker BEFORE the synthetic user record for
+    // /loop wakeups and ScheduleWakeup-fired prompts. If the hook fires
+    // between system-record write and user-record write (the transcript
+    // write race), the user record isn't visible yet but the system marker
+    // is — that's a strong signal the incoming prompt is a wakeup.
+    //
     // Match is intentionally EXACT (within a 500-char slice for long-prompt
     // efficiency) rather than substring-includes. Earlier `includes()`
     // heuristic over-triggered: if a prior synthetic record's text was
@@ -42,6 +49,34 @@ function isMetaUserRecord(transcriptPath: string | undefined, prompt: string): b
     // equality protects against substring collisions while still tolerating
     // CC vs hook-stdin truncation past 500 chars.
     const head = (s: string) => s.slice(0, 500);
+
+    // Scan the last 8 records (cheap) for a scheduled_task_fire system
+    // marker. If present and no genuine user record appears AFTER it, the
+    // incoming prompt is the wakeup that's about to be appended.
+    const TAIL_SCAN = 8;
+    let sawScheduledTaskFire = false;
+    let sawUserAfterScheduledTaskFire = false;
+    for (let i = Math.max(0, lines.length - TAIL_SCAN); i < lines.length; i++) {
+      let rec: any;
+      try { rec = JSON.parse(lines[i]); } catch { continue; }
+      if (rec.type === "system" && rec.subtype === "scheduled_task_fire") {
+        sawScheduledTaskFire = true;
+        sawUserAfterScheduledTaskFire = false;
+      } else if (sawScheduledTaskFire && rec.type === "user" && !rec.isSidechain) {
+        // Only count text user records, not tool_results.
+        const c = rec.message?.content;
+        const hasText = typeof c === "string"
+          ? !!c
+          : Array.isArray(c) && c.some((x: any) => x && typeof x.text === "string");
+        if (hasText) sawUserAfterScheduledTaskFire = true;
+      }
+    }
+    if (sawScheduledTaskFire && !sawUserAfterScheduledTaskFire) {
+      // Scheduled-task fire marker is at the tail with no user record after
+      // it yet — the upcoming prompt is the synthetic wakeup. Skip relay.
+      return true;
+    }
+
     for (let i = lines.length - 1; i >= 0; i--) {
       let rec: any;
       try { rec = JSON.parse(lines[i]); } catch { continue; }
