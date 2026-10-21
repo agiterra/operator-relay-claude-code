@@ -1,0 +1,10 @@
+# mcp-tee env allowlist — operator-relay plugin (operator-relay 2.2.0 + @agiterra/operator-relay-tools v1.1.0
+# + wire-tools v2.0.0). Base set (PATH HOME USER LOGNAME SHELL LANG LC_* TERM TMPDIR TZ) is implicit.
+# ENG-5158. Built from a static read of server.ts + node_modules/@agiterra/* (tests excluded) on 2026-10-21.
+# The server spawns no subprocesses. WIRE_* is listed by name so WIRE_DASHBOARD_TOKEN stays out.
+AGENT_ID                 # Wire identity
+AGENT_NAME
+AGENT_PLAN
+AGENT_PRIVATE_KEY        # signing
+CLAUDE_CODE_SESSION_ID   # session binding
+WIRE_URL
