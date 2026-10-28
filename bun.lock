@@ -7,7 +7,7 @@
       "dependencies": {
         "@agiterra/mcp-tee": "agiterra/mcp-tee#v0.3.0",
         "@agiterra/operator-relay-tools": "agiterra/operator-relay-tools#v1.1.0",
-        "@agiterra/wire-tools": "agiterra/wire-tools#v2.0.0",
+        "@agiterra/wire-tools": "agiterra/wire-tools#v2.25.3",
         "@modelcontextprotocol/sdk": "^1.0.0",
       },
       "devDependencies": {
@@ -15,12 +15,15 @@
       },
     },
   },
+  "overrides": {
+    "@agiterra/wire-tools": "agiterra/wire-tools#v2.25.3",
+  },
   "packages": {
     "@agiterra/mcp-tee": ["@agiterra/mcp-tee@github:agiterra/mcp-tee#4cec508", { "bin": { "mcp-tee": "./bin/mcp-tee.sh" } }, "agiterra-mcp-tee-4cec508", "sha512-OmLl0eVP5M/fOx0FUPhLiN2E8vr8Rue8hVd/VjkTY/W94XQSJXP3CAdlr5qpIXlWT/0t7DgIA2ghEZkROqYhWA=="],
 
     "@agiterra/operator-relay-tools": ["@agiterra/operator-relay-tools@github:agiterra/operator-relay-tools#414243c", { "dependencies": { "@agiterra/wire-tools": "agiterra/wire-tools#v2.0.0", "@modelcontextprotocol/sdk": "^1.29.0" } }, "agiterra-operator-relay-tools-414243c", "sha512-kniQw53a4ViVBgSZmsLSw1RUel1ixSwm32Ei9Yw/Do7m32E6OubcYBwr7AG7OAvxX+x3n718MiicY3v49J5Dxg=="],
 
-    "@agiterra/wire-tools": ["@agiterra/wire-tools@github:agiterra/wire-tools#e986537", { "dependencies": { "@modelcontextprotocol/sdk": "^1.29.0", "pino": "^10.3.1" } }, "agiterra-wire-tools-e986537", "sha512-O4a9aIyCXBx2ZdJebyBVBWEy968kgmY9682+46Va7PnxscISnfVMvKMiW1DLXEN0oEXP5rmEV/EIIdEDZ8zjoA=="],
+    "@agiterra/wire-tools": ["@agiterra/wire-tools@github:agiterra/wire-tools#ef0e0f9", { "dependencies": { "@modelcontextprotocol/sdk": "^1.29.0", "pino": "^10.3.1" } }, "agiterra-wire-tools-ef0e0f9", "sha512-bKHCbHGji5zS2CdWFkOpni5y1bdo4kR8Quq0j3L9mKIr6fbc+AuxGhVaI7MnWOCuIw1rwolkGsvV9Qv3Dt82yQ=="],
 
     "@hono/node-server": ["@hono/node-server@2.1.5", "", { "peerDependencies": { "hono": "^4 || ^5.0.0-0" } }, "sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q=="],
 

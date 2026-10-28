@@ -1,7 +1,7 @@
 {
   "name": "@agiterra/operator-relay-claude-code",
-  "version": "2.2.0",
-  "description": "Operator-prompt relay for Claude Code \u2014 forwards operator prompts to managing agents via Wire.",
+  "version": "2.2.1",
+  "description": "Operator-prompt relay for Claude Code — forwards operator prompts to managing agents via Wire.",
   "license": "MIT",
   "type": "module",
   "bin": "./server.ts",
@@ -16,11 +16,14 @@
   "dependencies": {
     "@agiterra/mcp-tee": "agiterra/mcp-tee#v0.3.0",
     "@agiterra/operator-relay-tools": "agiterra/operator-relay-tools#v1.1.0",
-    "@agiterra/wire-tools": "agiterra/wire-tools#v2.0.0",
+    "@agiterra/wire-tools": "agiterra/wire-tools#v2.25.3",
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
-  "author": "Tim Garthwaite <https://github.com/mividtim>"
+  "author": "Tim Garthwaite <https://github.com/mividtim>",
+  "overrides": {
+    "@agiterra/wire-tools": "agiterra/wire-tools#v2.25.3"
+  }
 }
